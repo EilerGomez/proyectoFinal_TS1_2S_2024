@@ -22,16 +22,16 @@ CREATE TABLE eventos(
     hora TIME NOT NULL,
     cupo_limitado INT NOT NULL,
     cupo_restante INT NOT NULL,
-    url VARCHAR(200) NOT NULL,
+    url VARCHAR(750) NOT NULL,
     tipo_publico VARCHAR(2) NOT NULL, /*T=todos, ME = menores de edad, MA=mayores de edad*/
     publicacion_automatica BOOLEAN NOT NULL,
     aprobacion BOOLEAN NOT NULL,
     estado VARCHAR(15) NOT NULL,
     PRIMARY KEY(id),
     CONSTRAINT id_usuario_usuario_evento_fk FOREIGN KEY(id_usuario)
-    REFERENCES usuarios(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+        REFERENCES usuarios(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 CREATE TABLE usuario_evento (
@@ -54,14 +54,14 @@ CREATE TABLE reporte_eventos(
 	motivo VARCHAR(50) NOT NULL,
     estado VARCHAR(15) NOT NULL,
     PRIMARY KEY(id_evento, id_usuario_reportador),
-	CONSTRAINT id_usuario_reportador_reporte_evento_fk FOREIGN KEY(id_usuario_reportador)
-    REFERENCES usuarios(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
+	CONSTRAINT id_usuario_reportador_reporte_evento_fk FOREIGN     KEY(id_usuario_reportador)
+        REFERENCES usuarios(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
     CONSTRAINT id_evento_report_reporte_evento_fk FOREIGN KEY(id_evento)
-    REFERENCES eventos(id)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+        REFERENCES eventos(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 
 /*CREATE USER 'user_practica1_TS1'@'localhost' IDENTIFIED BY 'practica1';
