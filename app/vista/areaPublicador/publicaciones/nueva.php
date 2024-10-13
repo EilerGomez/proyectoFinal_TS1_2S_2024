@@ -21,59 +21,70 @@
                                 <div class="well bs-component">
                                     <form class="form-horizontal" method="POST" action="http://localhost/proyecto_final_ts1/?c=publicacion&a=GuardarEvento&n=<?= $n ?>&rol=<?= $rol ?>&id=<?= $id ?>" enctype="multipart/form-data">
                                         <fieldset>
-                                            <legend>Ingrese los datos para la nueva publicacion</legend>
+                                            <legend><?= $titulo ?></legend>
+                                            <div class="form-group">
+                                                <input class="form-control" type="hidden"
+                                                    name="idP" id="idP" value="<?= $pe->getId() ?>">
+                                            </div>
                                             <div class="form-group">
                                                 <label class="col-lg-2 control-label" for="lugar">Lugar*</label>
                                                 <div class="col-lg-10">
-                                                    <input class="form-control" id="lugar" name="lugar" type="text" placeholder="Lugar" required>
+                                                    <input class="form-control" id="lugar" name="lugar" type="text" placeholder="Lugar" required value="<?= $pe->getLugar() ?>">
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label class="col-lg-2 control-label" for="fecha">Fecha*</label>
                                                 <div class="col-lg-10">
-                                                    <input class="form-control" id="fecha" name="fecha" type="date" placeholder="Fecha" required>
+                                                    <input class="form-control" id="fecha" name="fecha" type="date" placeholder="Fecha" required value="<?= $pe->getFecha() ?>">
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label class="col-lg-2 control-label" for="hora">Hora*</label>
                                                 <div class="col-lg-10">
-                                                    <input class="form-control" id="hora" name="hora" type="time" placeholder="Hora" required>
+                                                    <input class="form-control" id="hora" name="hora" type="time" placeholder="Hora" required value="<?= $pe->getHora() ?>">
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label class="col-lg-2 control-label" for="cupo">Cupo*</label>
                                                 <div class="col-lg-10">
-                                                    <input class="form-control" id="cupo" name="cupo" type="number" placeholder="Cupo de evento" required>
+                                                    <input class="form-control" id="cupo" name="cupo" type="number" placeholder="Cupo de evento" required value="<?= $pe->getCupoLimitado() ?>">
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label class="col-lg-2 control-label" for="url">Url*</label>
                                                 <div class="col-lg-10">
-                                                    <input class="form-control" id="url" name="url" type="text" placeholder="Url del evento" required>
+                                                    <input class="form-control" id="url" name="url" type="text" placeholder="Url del evento" required value="<?= $pe->getUrl() ?>">
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label class="col-lg-2 control-label" for="publico">Publico*</label>
                                                 <div class="col-lg-10">
                                                     <select class="form-control" id="publico" name="publico" required>
-                                                        <option value="T">Todos</option>
-                                                        <option value="ME">Menores de edad</option>
-                                                        <option value="MA">Mayores de edad</option>
+                                                        <option value="T" <?= $pe->getTipoPublico() === 'T' ? 'selected' : '' ?>>Todos</option>
+                                                        <option value="ME" <?= $pe->getTipoPublico() === 'ME' ? 'selected' : '' ?>>Menores de edad</option>
+                                                        <option value="MA" <?= $pe->getTipoPublico() === 'MA' ? 'selected' : '' ?>>Mayores de edad</option>
                                                     </select>
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <label class="col-lg-2 control-label" for="imagen">Imagen</label>
                                                 <div class="col-lg-10">
-                                                    <input class="form-control" id="imagen" name="imagen" type="file" placeholder="Agrega una imagen">
+                                                    <input class="form-control" id="imagen" name="imagen" type="file" placeholder="Agrega una imagen" value="<?= $pe->getImagen() ?>">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-lg-2 control-label" for="descripcion">Descripcion</label>
+                                                <div class="col-lg-10">
+                                                    <textarea class="form-control" id="descripcion" name="descripcion" placeholder="Descripcion de la publicacion"><?= $pe->getDescripcion() ?></textarea>
                                                 </div>
                                             </div>
                                             <div class="form-group">
                                                 <div class="col-lg-15 col-lg-offset-4">
                                                     <button class="btn btn-default" type="button" onclick="window.location.href='http://localhost/proyecto_final_ts1/?c=publicacion&a=Home&n=<?= $n ?>&rol=<?= $rol ?>&id=<?= $id ?>'">Cancelar</button>
-                                                    <button class="btn" id="submitBtn" type="submit" style="background-color: #007bff; color: white;">Crear publicacion</button>
+                                                    <button class="btn" id="submitBtn" type="submit" style="background-color: #007bff; color: white;"><?= $accion ?></button>
                                                 </div>
                                             </div>
+
                                         </fieldset>
                                     </form>
                                 </div>

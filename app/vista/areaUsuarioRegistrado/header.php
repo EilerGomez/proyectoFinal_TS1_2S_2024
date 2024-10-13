@@ -34,16 +34,13 @@
         <header class="d-flex justify-content-between align-items-center mb-4">
             <h1>Ola k hace</h1>
             <div>
-                <a href="http://localhost/proyecto_final_ts1/?c=publicacion&a=Home&n=<?= $n ?>&rol=<?= $rol ?>&id=<?= $id ?>" class="mr-3">
+                <a href="http://localhost/proyecto_final_ts1/?c=usuarioregistrado&a=Inicio&n=<?= $n ?>&rol=<?= $rol ?>&id=<?= $id ?>" class="mr-3">
                     <i class="fas fa-home notification-icon"></i>
                 </a>
-                <a href="http://localhost/proyecto_final_ts1/?c=publicacion&a=Notifications&n=<?= $n ?>&rol=<?= $rol ?>&id=<?= $id ?>" class="mr-3">
+                <a href="http://localhost/proyecto_final_ts1/?c=usuarioregistrado&a=NotificacionesEventos&n=<?= $n ?>&rol=<?= $rol ?>&id=<?= $id ?>" class="mr-3">
                     <i class="fas fa-bell notification-icon"></i>
                 </a>
-                <a href="http://localhost/proyecto_final_ts1/?c=publicacion&a=Nueva&n=<?= $n ?>&rol=<?= $rol ?>&id=<?= $id ?>">
-                    <i class="fas fa-plus notification-icon"></i> <!-- Icono de más -->
-                </a>
-                <a href="http://localhost/proyecto_final_ts1/?c=login&a=LogOut" class="ml-3">
+                <a href="http://localhost/proyecto_final_ts1/?c=login&a=LogOut">
                     <i class="fas fa-sign-out-alt notification-icon"></i> <!-- Icono de log out -->
                 </a>
             </div>

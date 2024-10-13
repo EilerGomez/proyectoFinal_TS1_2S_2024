@@ -23,6 +23,7 @@ CREATE TABLE eventos(
     cupo_limitado INT NOT NULL,
     cupo_restante INT NOT NULL,
     url VARCHAR(750),
+    descripcion VARCHAR(1000),
     tipo_publico VARCHAR(2) NOT NULL, /*T=todos, ME = menores de edad, MA=mayores de edad*/
     publicacion_automatica BOOLEAN NOT NULL,
     aprobacion BOOLEAN NOT NULL,
@@ -52,7 +53,7 @@ CREATE TABLE usuario_evento (
 CREATE TABLE reporte_eventos(
 	id_evento INT NOT NULL,
     id_usuario_reportador INT NOT NULL,
-	motivo VARCHAR(50) NOT NULL,
+	motivo VARCHAR(200) NOT NULL,
     estado VARCHAR(15) NOT NULL,
     PRIMARY KEY(id_evento, id_usuario_reportador),
 	CONSTRAINT id_usuario_reportador_reporte_evento_fk FOREIGN     KEY(id_usuario_reportador)
@@ -61,6 +62,18 @@ CREATE TABLE reporte_eventos(
         ON UPDATE CASCADE,
     CONSTRAINT id_evento_report_reporte_evento_fk FOREIGN KEY(id_evento)
         REFERENCES eventos(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+drop table notificaciones;
+CREATE TABLE notificaciones( -- notificaciones para el usuario
+	id INT NOT NULL auto_increment,
+	id_usuario INT NOT NULL, -- usuario al que se le va mostrar las notificaciones
+    name_usuario VARCHAR(100), -- usuario que esta interactuando
+    descripcion VARCHAR(200) NOT NULL, -- descripcion de la notificacion,
+    PRIMARY KEY(id),
+    CONSTRAINT fk_usuario_notificacion_usuario FOREIGN KEY(id_usuario)
+        REFERENCES usuarios(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -99,23 +112,27 @@ CREATE PROCEDURE guardar_evento(
     IN cupo_e INT,
     IN url_e VARCHAR(200),
     IN publico_e VARCHAR(2),
-    IN imagen_e VARCHAR(200)
+    IN imagen_e VARCHAR(200),
+    IN descripcion_e VARCHAR(1000)
 )
 BEGIN
     DECLARE automaticpublicacion BOOLEAN DEFAULT FALSE; -- Cambiado a BOOLEAN
     DECLARE cantidadPublicaciones INT DEFAULT 0; -- Tipo INT y inicializado
+    DECLARE permisoPublicar BOOLEAN DEFAULT FALSE;
 
     -- Contar las publicaciones aprobadas del usuario
     SELECT COUNT(*) INTO cantidadPublicaciones 
     FROM eventos 
     WHERE id_usuario = id_user AND aprobacion = TRUE;
 
+	SELECT permiso_publicar INTO permisoPublicar FROM usuarios  
+    WHERE ID = id_user;
     -- Verificar si el usuario tiene dos o más publicaciones aprobadas
-    IF (cantidadPublicaciones >= 2) THEN
+    IF (cantidadPublicaciones >= 2 and permisoPublicar = TRUE) THEN
         SET automaticpublicacion = TRUE; -- Establecer a TRUE si cumple la condición
     END IF;
 
-    -- Insertar el nuevo evento
+	IF(permisoPublicar = TRUE or cantidadPublicaciones >= 2 ) THEN
     INSERT INTO eventos (
         id_usuario, 
         lugar, 
@@ -128,7 +145,8 @@ BEGIN
         publicacion_automatica, 
         aprobacion, 
         estado,
-        imagen
+        imagen,
+        descripcion
     )
     VALUES (
         id_user, 
@@ -142,8 +160,12 @@ BEGIN
         automaticpublicacion, -- Aquí se usa el valor calculado
         automaticpublicacion, -- También puedes usar la misma variable aquí
         'PENDIENTE', -- Estado por defecto,
-        imagen_e
+        imagen_e,
+        descripcion_e
     );
+    END IF;
+   
+    
 
     -- Devolver el evento recién insertado
    --  SELECT * FROM eventos WHERE id_evento = LAST_INSERT_ID(); -- Asegúrate de usar el ID correcto
@@ -167,31 +189,200 @@ CREATE PROCEDURE guardar_usuario(
 BEGIN
     -- Insertar el nuevo usuario
     INSERT INTO usuarios (nombres, apellidos, telefono, rol, edad, password,permiso_publicar)
-    VALUES (p_nombres, p_apellidos, p_telefono, p_rol, p_edad, p_password,false);
+    VALUES (p_nombres, p_apellidos, p_telefono, p_rol, p_edad, p_password,true);
     
     -- Devolver el usuario recién insertado
     SELECT * FROM usuarios WHERE id = LAST_INSERT_ID();
 END //
 
 DELIMITER ;
+
+
+ -- funcion para actualizar evento
+DELIMITER //
+CREATE PROCEDURE actualizar_evento(
+    IN p_id INT,
+    IN p_id_usuario INT,
+    IN p_lugar VARCHAR(70),
+    IN p_fecha DATE,
+    IN p_hora TIME,
+    IN p_cupo_limitado INT,
+    IN p_url VARCHAR(750),
+    IN p_tipo_publico VARCHAR(2),
+    IN p_imagen VARCHAR(200),
+    IN p_descripcion VARCHAR(1000)
+)
+BEGIN
+    IF p_imagen = 'null' THEN
+        -- Si la imagen es 'null', no se actualiza el campo 'imagen'
+        UPDATE eventos
+        SET 
+            id_usuario = p_id_usuario,
+            lugar = p_lugar,
+            fecha = p_fecha,
+            hora = p_hora,
+            cupo_limitado = p_cupo_limitado,
+            cupo_restante = cupo_restante + (p_cupo_limitado-cupo_restante),
+            url = p_url,
+            tipo_publico = p_tipo_publico,
+            descripcion = p_descripcion
+        WHERE id = p_id;
+    ELSE
+        -- Si la imagen tiene un valor diferente de 'null', se actualiza el campo 'imagen'
+        UPDATE eventos
+        SET 
+            id_usuario = p_id_usuario,
+            lugar = p_lugar,
+            fecha = p_fecha,
+            hora = p_hora,
+            cupo_limitado = p_cupo_limitado,
+            cupo_restante = cupo_restante + (p_cupo_limitado-cupo_restante),
+            url = p_url,
+            tipo_publico = p_tipo_publico,
+            imagen = p_imagen,
+            descripcion = p_descripcion
+        WHERE id = p_id;
+    END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE obtener_eventos_publicados(IN idP INT, IN idU INT)
+BEGIN
+    IF idP = 0 THEN -- Es el usuario registrado
+        SELECT 
+            e.id, 
+            SUM(CASE WHEN re.estado = 'REPORTADA' THEN 1 ELSE 0 END) AS reportes, -- Contar el número de reportes con estado 'REPORTADA'
+            CONCAT(u.nombres, ' ', u.apellidos) AS usuarioPublicador, 
+            u.id AS usuarioNotificacion, -- Al que se le va mostrar la notificación si se inscribió a la publicación
+            e.lugar, 
+            e.fecha, 
+            e.hora, 
+            e.cupo_limitado, 
+            e.cupo_restante, 
+            e.url, 
+            e.tipo_publico, 
+            e.estado, 
+            e.imagen, 
+            e.descripcion,
+            CASE WHEN ue.id_evento IS NOT NULL THEN true ELSE false END AS asistiendo -- Determinar si el usuario está asistiendo
+        FROM 
+            eventos e
+        LEFT JOIN 
+            usuario_evento ue ON e.id = ue.id_evento AND ue.id_usuario = idU -- Verificar si el usuario está inscrito al evento
+        LEFT JOIN 
+            reporte_eventos re ON re.id_evento = e.id -- Unión con la tabla de reportes
+        JOIN 
+            usuarios u ON e.id_usuario = u.id
+        WHERE 
+            e.aprobacion = true 
+        GROUP BY 
+            e.id, u.id -- Agrupar por el id del evento y usuario
+        HAVING 
+            SUM(CASE WHEN re.estado = 'REPORTADA' THEN 1 ELSE 0 END) < 3 -- Filtrar para eventos con menos de 3 reportes 'REPORTADA'
+        ORDER BY 
+            e.id DESC;
+    ELSE 
+        SELECT 
+            e.id, 
+            CONCAT(u.nombres, ' ', u.apellidos) AS usuarioPublicador, 
+            e.lugar, 
+            e.fecha, 
+            e.hora, 
+            e.cupo_limitado, 
+            e.cupo_restante, 
+            e.url, 
+            e.tipo_publico, 
+            e.estado, 
+            e.imagen, 
+            e.descripcion 
+        FROM 
+            eventos e
+        JOIN 
+            usuarios u ON e.id_usuario = u.id
+        WHERE 
+            e.aprobacion = true AND e.id = idP 
+        ORDER BY 
+            e.id DESC;
+    END IF;
+END //
+DELIMITER ;
+
+
+DELIMITER //
+CREATE PROCEDURE obtener_usuario_evento(IN idU INT)
+BEGIN
+    SELECT 
+            e.id, 
+            SUM(CASE WHEN re.estado = 'REPORTADA' THEN 1 ELSE 0 END) AS reportes, -- Contar el número de reportes con estado 'REPORTADA'
+            CONCAT(u.nombres, ' ', u.apellidos) AS usuarioPublicador, 
+            u.id AS usuarioNotificacion, -- Al que se le va mostrar la notificación si se inscribió a la publicación
+            e.lugar, 
+            e.fecha, 
+            e.hora, 
+            e.cupo_limitado, 
+            e.cupo_restante, 
+            e.url, 
+            e.tipo_publico, 
+            e.estado, 
+            e.imagen, 
+            e.descripcion,
+            CASE WHEN ue.id_evento IS NOT NULL THEN true ELSE false END AS asistiendo -- Determinar si el usuario está asistiendo
+        FROM 
+            eventos e
+        INNER JOIN 
+            usuario_evento ue ON e.id = ue.id_evento AND ue.id_usuario = idU -- Verificar si el usuario está inscrito al evento
+        LEFT JOIN 
+            reporte_eventos re ON re.id_evento = e.id -- Unión con la tabla de reportes
+        JOIN 
+            usuarios u ON e.id_usuario = u.id
+        WHERE 
+            e.aprobacion = true
+        GROUP BY 
+            e.id, u.id -- Agrupar por el id del evento y usuario
+        HAVING 
+            SUM(CASE WHEN re.estado = 'REPORTADA' THEN 1 ELSE 0 END) < 3 -- Filtrar para eventos con menos de 3 reportes 'REPORTADA'
+        ORDER BY 
+            e.id DESC;
+END //
+
+DELIMITER ;
+
+
 GRANT EXECUTE ON PROCEDURE sistema_eventos.guardar_usuario TO 'user_proyect_final'@'localhost';
 GRANT EXECUTE ON PROCEDURE sistema_eventos.obtener_usuario TO 'user_proyect_final'@'localhost';
 GRANT EXECUTE ON PROCEDURE sistema_eventos.guardar_evento TO 'user_proyect_final'@'localhost';
+GRANT EXECUTE ON PROCEDURE sistema_eventos.actualizar_evento TO 'user_proyect_final'@'localhost';
+GRANT EXECUTE ON PROCEDURE sistema_eventos.obtener_eventos_publicados TO 'user_proyect_final'@'localhost';
+GRANT EXECUTE ON PROCEDURE sistema_eventos.obtener_usuario_evento TO 'user_proyect_final'@'localhost';
 
 select * from eventos;
+
 describe eventos;
 call obtener_usuario(1,'password123',1);
 CALL guardar_usuario('Juan', 'Perez', 123456789, 1, 30, 'mi_contraseña_segura');
 CALL guardar_evento('Juan', 'Perez', 123456789, 1, 30, 'mi_contraseña_segura');
-CALL guardar_evento(
-    1,                     -- id_user: ID del usuario, debe ser un número entero (ejemplo: 1)
-    'Centro de Eventos',  -- lugar_e: Nombre del lugar, debe ser una cadena de texto
-    '2024-10-10',         -- fecha_e: Fecha del evento en formato YYYY-MM-DD
-    '14:00:00',          -- hora_e: Hora del evento en formato HH:MM:SS
-    30,                   -- cupo_e: Número máximo de asistentes (ejemplo: 30)
-    'http://example.com', -- url_e: URL relacionado con el evento
-    'P'                   -- publico_e: Tipo de público (ejemplo: 'P' para público)
-);
+delete from eventos where id_usuario=3;
+
+
+
 
 SHOW PROCEDURE STATUS WHERE Db = 'sistema_eventos';
+select * from notificaciones;
+insert into notificaciones(id_usuario, name_usuario, descripcion) values (3,'Jorge Morales','Se ha unido a tu publicacion San Jose xd');
+update eventos set aprobacion = true where id=26;
+
+
+
+insert into usuario_evento(id_evento, id_usuario) values (25,4);
+delete from usuario_evento where id_evento = 25 and id_usuario=4;
+select * from usuario_evento;
+select * from notificaciones;
+truncate notificaciones;
+select * from usuarios;
+update usuarios set permiso_publicar=true where id > 0;
+
+insert into reporte_eventos(id_evento,id_usuario_reportador,motivo,estado) values ();
+select * from reporte_eventos;
+update reporte_eventos set estado = 'PENDIENTE' where id_evento = 27;
 

@@ -35,11 +35,31 @@ class PublicacionControlador
         require_once "vista/areaPublicador/foot.php";
     }
 
+    public function Notifications()
+    {
+        $n = $_GET['n'];
+        $rol = $_GET['rol'];
+        $id = $_GET['id'];
+        $this->llavedeAcceso((int)$_GET['rol']);
+        require_once "vista/areaPublicador/header.php";
+        require_once "vista/areaPublicador/publicaciones/notificaciones.php"; // Aquí es donde usas $name
+        require_once "vista/areaPublicador/foot.php";
+    }
+
     public function Nueva()
     {
         $n = $_GET['n'];
         $rol = $_GET['rol'];
         $id = $_GET['id'];
+        $accion = "Guardar publicacion";
+        $titulo = "Ingrese los datos para la nueva publicacion";
+        $pe = new Evento();
+        $pe->setId(0);
+        if (isset($_GET['idP'])) {
+            $pe = $this->modeloEvento->getEventoById((int)$_GET['idP']);
+            $accion = "Actualizar publicacion";
+            $titulo = "Ingrese los datos si desea modificar la publicacion";
+        }
         $this->llavedeAcceso((int)$_GET['rol']);
         require_once "vista/areaPublicador/header.php";
         require_once "vista/areaPublicador/publicaciones/nueva.php";
@@ -61,21 +81,38 @@ class PublicacionControlador
             $_POST['url'],
             $_POST['publico']
         )) {
-            // Guardar los datos en la base de datos
-            $this->modeloEvento->guardarEvento(
-                (int)$id,
-                $_POST['lugar'],
-                $_POST['fecha'],
-                $_POST['hora'],
-                (int)$_POST['cupo'],
-                (int)$_POST['cupo'],
-                $_POST['url'],
-                $_POST['publico'],
-                $rutaImagen // Guardar la ruta de la imagen en la base de datos
-            );
+            if (((int)$_POST['idP']) > 0) {
+                $this->modeloEvento->actualizarEvento(
+                    (int)$_POST['idP'],
+                    (int)$id,
+                    $_POST['lugar'],
+                    $_POST['fecha'],
+                    $_POST['hora'],
+                    (int)$_POST['cupo'],
+                    $_POST['url'],
+                    $_POST['publico'],
+                    $rutaImagen,
+                    $_POST['descripcion']
+                );
+                $this->mostrarAletraExitoGuardadoEvento($n, $rol, $id, msj: "Evento actualizado correctamente");
+            } else {
+                // Guardar los datos en la base de datos
+                $this->modeloEvento->guardarEvento(
+                    (int)$id,
+                    $_POST['lugar'],
+                    $_POST['fecha'],
+                    $_POST['hora'],
+                    (int)$_POST['cupo'],
+                    (int)$_POST['cupo'],
+                    $_POST['url'],
+                    $_POST['publico'],
+                    $rutaImagen, // Guardar la ruta de la imagen en la base de datos
+                    $_POST[(string)'descripcion']
+                );
 
-            // Mostrar un mensaje de éxito
-            $this->mostrarAletraExitoGuardadoEvento($n, $rol, $id);
+                // Mostrar un mensaje de éxito
+                $this->mostrarAletraExitoGuardadoEvento($n, $rol, $id, "Evento guardado correctamente");
+            }
         }
     }
 
@@ -152,10 +189,10 @@ class PublicacionControlador
 
 
 
-    private function mostrarAletraExitoGuardadoEvento(string $n, int $rol, int $id): void
+    private function mostrarAletraExitoGuardadoEvento(string $n, int $rol, int $id, string $msj): void
     {
         echo "<script>
-            alert('Evento guardado correctamente.');
+            alert('" . $msj . "');
             window.location.href = 'http://localhost/proyecto_final_ts1/?c=publicacion&a=Home&n=" . urlencode($n) . "&rol=" . $rol . "&id=" . $id . "';
         </script>";
         exit; // Asegúrate de salir para que no se ejecute más código.
