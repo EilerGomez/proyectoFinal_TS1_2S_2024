@@ -30,6 +30,28 @@ class ReporteEvento
         }
     }
 
+    public function getReportesEventos()
+    {
+        try {
+            $query = $this->pdo->prepare("CALL obtener_reportes_eventos();");
+            $query->execute(array());
+            return $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (Exception $th) {
+            die($th->getMessage());
+        }
+    }
+
+    public function aceptarReporteEvento(int $idP, int $idUR)
+    {
+        try {
+            $query = $this->pdo->prepare("CALL aceptar_reporte_evento(?,?);");
+            $query->execute(array($idP, $idUR));
+            return true;
+        } catch (Exception $th) {
+            die($th->getMessage());
+        }
+    }
+
     public function getUsuarioReportador(): int
     {
         return $this->usuario_reportador;

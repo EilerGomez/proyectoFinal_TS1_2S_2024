@@ -1,10 +1,10 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+<link rel="stylesheet" type="text/css" href="http://localhost/proyecto_final_ts1/assets/css/main.css">
 
 <div class="container">
-    <h1>Notificaciones de eventos</h1>
 
     <div id="posts">
-        <?php foreach ($this->modeloUsuarioEvento->traerEventoUsuario($id) as $e): ?>
+        <?php foreach ($this->modeloEvento1->traerEventosPublicados($idP, $id) as $e): ?>
             <div class="post mb-3">
                 <div class="card shadow-sm">
                     <div class="card-body">
@@ -18,39 +18,44 @@
                                 <?php else: ?>
                                     <i class="bi bi-person" style="font-size: 1.5rem;" title="Mayores de edad"></i>
                                 <?php endif; ?>
-                                <strong>Publicado por:</strong> <?= $e->usuarioPublicador ?><br>
-                                <!-- Calcular y mostrar el tiempo restante -->
-                                <?php
-                                $fechaEvento = new DateTime($e->fecha);
-                                $hoy = new DateTime();
-                                $intervalo = $hoy->diff($fechaEvento);
-                                $diasRestantes = $intervalo->format('%r%a');
-                                ?>
-                                <small class="text-muted">
-                                    Tiempo restante: <?= $diasRestantes ?> día(s)
-                                </small>
+                                Publicado por <strong><?= $e->usuarioPublicador ?></strong><br>
+                                <small class="text-muted">Fecha del evento: <?= $e->fecha ?> a las <?= $e->hora ?></small>
                             </div>
+
                         </div>
 
-                        <!-- Mostrar la descripción del evento -->
                         <p class="mt-2">
+                            Lugar: <strong><?= $e->lugar ?></strong> <br>
+                            Público: <?= $e->tipo_publico === 'T' ? 'Todos' : ($e->tipo_publico === 'ME' ? 'Menores de edad' : 'Mayores de edad') ?>
+                            <br>
                             <?= $e->descripcion ?>
                         </p>
 
                         <!-- Mostrar la imagen si está disponible -->
                         <?php if (!empty($e->imagen)): ?>
-                            <img src="<?= $e->imagen ?>" class="img-fluid rounded mb-3" alt="Imagen del evento">
+                            <img src="<?= $e->imagen ?>" class="img-fluid rounded mb-3" alt="Sin imagen">
                         <?php endif; ?><br>
 
-                        <!-- Botón para más información -->
+                        <!-- Mostrar la URL de referencia del evento si existe -->
                         <?php if (!empty($e->url)): ?>
                             <a href="<?= $e->url ?>" target="_blank" class="btn btn-primary">Más información</a>
                         <?php endif; ?>
 
-                        <!-- Mostrar el estado del evento -->
-                        <p class="text-muted mt-3">
-                            <strong>Estado del evento:</strong> <?= $e->estado ?>
+                        <!-- Información del cupo -->
+                        <p class="mt-3">
+                            Cupo restante: <strong><?= $e->cupo_restante ?></strong>
                         </p>
+
+                        <!-- Mostrar el estado del evento -->
+                        <p class="text-muted">
+                            Estado del evento: <strong><?= $e->estado ?></strong><br>
+                        </p>
+
+                        <div class="text-end mt-4">
+                            <button class="btn btn-default" type="button" onclick="window.history.back();">Volver</button>
+                        </div>
+
+
                     </div>
                 </div>
             </div>

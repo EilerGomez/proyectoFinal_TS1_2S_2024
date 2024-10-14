@@ -84,7 +84,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON sistema_eventos.* TO 'user_proyect_final
 -- crear funciones en la base de datos
 -- insertando un usuario admin
 INSERT INTO usuarios (nombres, apellidos, telefono, rol, password, edad, permiso_publicar)
-VALUES ('Juan', 'Pérez', 1234567890, 1, 'password123', 30, TRUE);
+VALUES ('Juan', 'Pérez', 1234567890, 1, 'password123', 30, 1);
 
 DELIMITER //
 
@@ -301,7 +301,7 @@ BEGIN
         JOIN 
             usuarios u ON e.id_usuario = u.id
         WHERE 
-            e.aprobacion = true AND e.id = idP 
+			e.id = idP 
         ORDER BY 
             e.id DESC;
     END IF;
@@ -345,8 +345,32 @@ BEGIN
         ORDER BY 
             e.id DESC;
 END //
-
 DELIMITER ;
+
+
+DELIMITER //
+CREATE PROCEDURE obtener_reportes_eventos()
+BEGIN
+    SELECT re.id_evento,CONCAT(u.nombres, ' ', u.apellidos) as usuario_reportador,
+    re.id_usuario_reportador,
+    re.motivo, re.estado 
+    FROM reporte_eventos re
+    JOIN usuarios u ON re.id_usuario_reportador = u.id;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE PROCEDURE aceptar_reporte_evento(IN idP INT, IN idUR INT)
+BEGIN
+	DECLARE idPublicador INT DEFAULT 0;
+    SELECT id_usuario INTO  idPublicador from eventos WHERE id=idP;
+    UPDATE usuarios SET permiso_publicar = false WHERE id = idPublicador;
+    UPDATE reporte_eventos SET estado = 'REPORTADA' where id_evento = idP 
+		AND id_usuario_reportador = idUR;
+    
+END //
+DELIMITER ;
+
 
 
 GRANT EXECUTE ON PROCEDURE sistema_eventos.guardar_usuario TO 'user_proyect_final'@'localhost';
@@ -355,6 +379,7 @@ GRANT EXECUTE ON PROCEDURE sistema_eventos.guardar_evento TO 'user_proyect_final
 GRANT EXECUTE ON PROCEDURE sistema_eventos.actualizar_evento TO 'user_proyect_final'@'localhost';
 GRANT EXECUTE ON PROCEDURE sistema_eventos.obtener_eventos_publicados TO 'user_proyect_final'@'localhost';
 GRANT EXECUTE ON PROCEDURE sistema_eventos.obtener_usuario_evento TO 'user_proyect_final'@'localhost';
+GRANT EXECUTE ON PROCEDURE sistema_eventos.obtener_reportes_eventos TO 'user_proyect_final'@'localhost';
 
 select * from eventos;
 
@@ -370,7 +395,7 @@ delete from eventos where id_usuario=3;
 SHOW PROCEDURE STATUS WHERE Db = 'sistema_eventos';
 select * from notificaciones;
 insert into notificaciones(id_usuario, name_usuario, descripcion) values (3,'Jorge Morales','Se ha unido a tu publicacion San Jose xd');
-update eventos set aprobacion = true where id=26;
+update eventos set aprobacion = true where id=29;
 
 
 
@@ -386,3 +411,4 @@ insert into reporte_eventos(id_evento,id_usuario_reportador,motivo,estado) value
 select * from reporte_eventos;
 update reporte_eventos set estado = 'PENDIENTE' where id_evento = 27;
 
+select * from reporte_eventos;

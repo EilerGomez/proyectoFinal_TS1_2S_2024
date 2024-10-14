@@ -164,6 +164,28 @@ class Evento
         }
     }
 
+    public function getEventosParaAdmin()
+    {
+        try {
+            $query = $this->pdo->prepare("SELECT * from eventos order by aprobacion;");
+            $query->execute(array());
+            return $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (Exception $th) {
+            die($th->getMessage());
+        }
+    }
+
+    public function aprobarPublicacionAdmin(int $idP)
+    {
+        try {
+            $query = $this->pdo->prepare("UPDATE eventos SET aprobacion = 1 - aprobacion WHERE id = ?;");
+            $query->execute(array($idP));
+            return true;
+        } catch (Exception $th) {
+            die($th->getMessage());
+        }
+    }
+
 
 
 

@@ -9,7 +9,7 @@ echo "<script>
         if (usuario) {
             // Verificar el rol y redirigir según sea necesario
             if (usuario.rol === 1) {
-                window.location.href = 'admin_dashboard.php'; // Redirigir a un dashboard de administrador
+                window.location.href = 'http://localhost/proyecto_final_ts1/?c=admin&a=Inicio&n='+usuario.nombres + '&rol='+usuario.rol+'&id='+usuario.id;  // Redirigir a un dashboard de administrador
             }else if(usuario.rol===2){
                 window.location.href = 'http://localhost/proyecto_final_ts1/?c=publicacion&a=Inicio&n='+usuario.nombres + '&rol='+usuario.rol+'&id='+usuario.id; // Redirigir a un dashboard de publicador
             }else if(usuario.rol===3){

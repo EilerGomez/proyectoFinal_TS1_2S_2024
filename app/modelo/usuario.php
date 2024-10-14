@@ -1,17 +1,18 @@
 <?php
+require_once "modelo/db.php";
 
 class Usuario implements JsonSerializable
 {
     private $pdo; // objeto de conexión
 
-    private int $id;
-    private string $nombres;
-    private string $apellidos;
-    private int $telefono;
-    private int $rol;
-    private string $password;
-    private int $edad;
-    private float $permiso_publicar; // double en PHP es float
+    private  $id;
+    private  $nombres;
+    private  $apellidos;
+    private  $telefono;
+    private  $rol;
+    private  $password;
+    private  $edad;
+    private  $permiso_publicar; // double en PHP es float
 
     // Constructor
     public function __construct()
@@ -119,6 +120,49 @@ class Usuario implements JsonSerializable
         ];
     }
 
+    public function getUsuarios()
+    {
+        try {
+            $query = $this->pdo->prepare("SELECT * FROM usuarios;");
+            $query->execute(array());
+            return $query->fetchAll(PDO::FETCH_OBJ);
+        } catch (Exception $th) {
+            die($th->getMessage());
+        }
+    }
+
+    public function getUsuarioById(int $idU): Usuario
+    {
+        try {
+            // Preparar la consulta SQL para obtener el usuario por su ID
+            $query = $this->pdo->prepare("SELECT * FROM usuarios WHERE id = ?;");
+            $query->execute([$idU]);
+            $r = $query->fetch(PDO::FETCH_OBJ); // Obtener solo un registro, por eso se usa fetch
+
+            // Comprobar si se encontró un usuario
+            if (!$r) {
+                throw new Exception("Usuario no encontrado."); // Manejar el caso si no se encuentra el usuario
+            }
+
+            // Crear una instancia de Usuario y asignar los valores recuperados
+            $usuario = new Usuario();
+            $usuario->setId($r->id);
+            $usuario->setNombres($r->nombres);
+            $usuario->setApellidos($r->apellidos);
+            $usuario->setTelefono($r->telefono);
+            $usuario->setRol($r->rol);
+            $usuario->setEdad($r->edad);
+            $usuario->setPermisoPublicar($r->permiso_publicar);
+            // Si tienes otros métodos de setter, añádelos aquí
+
+            return $usuario;
+        } catch (Exception $th) {
+            // Manejar la excepción en caso de error
+            die($th->getMessage());
+        }
+    }
+
+
     public function guardarUsuario(string $nombres, string $apellidos, int $telefono, int $rol, int $edad, string $password)
     {
         try {
@@ -145,6 +189,31 @@ class Usuario implements JsonSerializable
             return $u;
         } catch (Exception $th) {
             // Manejar excepciones y errores
+            die($th->getMessage());
+        }
+    }
+
+    public function guardarUsuarioDeAdmin(string $nombres, string $apellidos, int $telefono, int $rol, int $edad, string $password, int $permiso_publicar)
+    {
+
+        try {
+            $query = $this->pdo->prepare("INSERT INTO usuarios (nombres, apellidos, telefono, rol, password, edad, permiso_publicar)
+                                                VALUES (?, ?, ?, ?, ?, ?, ?);");
+            $query->execute(array($nombres, $apellidos, $telefono, $rol, $password, $edad, $permiso_publicar));
+            return true;
+        } catch (Exception $th) {
+            die($th->getMessage());
+        }
+    }
+
+    public function actualizarUsuario(int $idU, string $nombres, string $apellidos, int $telefono, int $rol, int $edad, string $password, int $permiso_publicar)
+    {
+        try {
+            $query = $this->pdo->prepare("UPDATE usuarios SET nombres=?, apellidos=?, telefono=?, rol=?, password=?, edad=?, permiso_publicar=?
+                                                WHERE id = ? ;");
+            $query->execute(array($nombres, $apellidos, $telefono, $rol, $password, $edad, $permiso_publicar, $idU));
+            return true;
+        } catch (Exception $th) {
             die($th->getMessage());
         }
     }
