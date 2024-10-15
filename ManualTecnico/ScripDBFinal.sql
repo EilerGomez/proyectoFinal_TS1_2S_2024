@@ -16,7 +16,7 @@ CREATE TABLE usuarios(
 
 CREATE TABLE eventos(
 	id INT NOT NULL AUTO_INCREMENT,
-    id_usuario INT NOT NULL,/*USUARIO QUE CREO EL EVENTO*/
+    id_usuario INT NOT NULL,/* USUARIO QUE CREO EL EVENTO*/
     lugar VARCHAR(70) NOT NULL,
     fecha DATE NOT NULL,
     hora TIME NOT NULL,
@@ -65,7 +65,7 @@ CREATE TABLE reporte_eventos(
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
-drop table notificaciones;
+
 CREATE TABLE notificaciones( -- notificaciones para el usuario
 	id INT NOT NULL auto_increment,
 	id_usuario INT NOT NULL, -- usuario al que se le va mostrar las notificaciones
@@ -381,7 +381,7 @@ GRANT EXECUTE ON PROCEDURE sistema_eventos.obtener_eventos_publicados TO 'user_p
 GRANT EXECUTE ON PROCEDURE sistema_eventos.obtener_usuario_evento TO 'user_proyect_final'@'localhost';
 GRANT EXECUTE ON PROCEDURE sistema_eventos.obtener_reportes_eventos TO 'user_proyect_final'@'localhost';
 GRANT EXECUTE ON PROCEDURE sistema_eventos.aceptar_reporte_evento TO 'user_proyect_final'@'localhost';
-
+/*
 select * from eventos;
 
 describe eventos;
@@ -415,4 +415,4 @@ update reporte_eventos set estado = 'PENDIENTE' where id_evento = 27;
 
 select * from reporte_eventos;
 
-select * from eventos order by aprobacion and id asc;
+select * from eventos order by aprobacion and id asc;*/
